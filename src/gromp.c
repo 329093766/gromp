@@ -1,5 +1,13 @@
 #include "gromp.h"
 
+const char *REQUESTS[] = {
+    "REQUEST_INVALID",
+    "REQUEST_GET",
+    "REQUEST_HEAD",
+    "REQUEST_POST",
+    "REQUEST_BAD"
+};
+
 gromp_server *create_gromp_server() {
     gromp_server *gromp = malloc(sizeof(*gromp));
     gromp->port = 80;
@@ -26,8 +34,36 @@ void start_gromp_server(gromp_server *gromp) {
     gromp->running = true;
 }
 
+int get_req_type(char *request) {
+    char *request_header = request; // todo process
+    for (int i = 0; i < ARR_SIZE(REQUESTS); i++) {
+        if (!strcmp(request_header, REQUESTS[i])) {
+            return i;
+        }
+    }
+    return REQUEST_INVALID;
+}
+
+void handle_get_req(gromp_server *gromp) {
+    
+}
+
 int gromp_receive(gromp_server *gromp) {
     int packet_length = 0;
+    char *buffer = sdsempty();
+
+    if ((packet_length = recv(gromp->current_socket, buffer, 0, false))) {
+        gromp_error(gromp, "error: failed handling request\n");
+        return REQUEST_INVALID;
+    }
+
+    int request = get_req_type(buffer);
+    switch (request) {
+        case REQUEST_GET: handle_get_req(gromp); break;
+        case REQUEST_HEAD: break;
+        case REQUEST_POST: break;
+        default: break; // bad
+    }
 }
 
 void create_socket(gromp_server *gromp) {
@@ -62,8 +98,8 @@ void accept_connections(gromp_server *gromp) {
         gromp_error(gromp, "error: failed to accept socket");
     }   
 
-    // handle
-    // close
+    handle_connection(gromp);
+    close(gromp->connecting_socket);
 }
 
 void gromp_start_listening(gromp_server *gromp) {
