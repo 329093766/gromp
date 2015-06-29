@@ -29,9 +29,11 @@ void start_gromp_server(gromp_server *gromp) {
         fprintf(stderr, "error: gromp server already running\n");
         return;
     }
-    printf("starting gromp...\n");
-    create_socket(gromp);
+    printf("gromp: starting gromp...\n");
     gromp->running = true;
+    create_socket(gromp);
+    bind_socket(gromp);
+    start_listening(gromp);
 }
 
 int get_req_type(char *request) {
@@ -44,8 +46,8 @@ int get_req_type(char *request) {
     return REQUEST_INVALID;
 }
 
-void handle_get_req(gromp_server *gromp) {
-    
+void handle_get_req(gromp_server *gromp, char *buffer) {
+    printf("buffer (%d:%d): %s\n", gromp->current_socket, gromp->port, buffer);
 }
 
 int gromp_receive(gromp_server *gromp) {
@@ -59,7 +61,7 @@ int gromp_receive(gromp_server *gromp) {
 
     int request = get_req_type(buffer);
     switch (request) {
-        case REQUEST_GET: handle_get_req(gromp); break;
+        case REQUEST_GET: handle_get_req(gromp, buffer); break;
         case REQUEST_HEAD: break;
         case REQUEST_POST: break;
         default: break; // bad
@@ -81,12 +83,14 @@ void bind_socket(gromp_server *gromp) {
 
     if (bind(gromp->current_socket, (struct sockaddr*) &gromp->address, sizeof(gromp->address)) < 0) {
         gromp_error(gromp, "error: failed to bind port %d\n", gromp->port);
+        return;
     }
 }
 
 void handle_connection(gromp_server *gromp) {
     if (gromp_receive(gromp) < 0) {
-        gromp_error(gromp, "failed to receive connection");
+        gromp_error(gromp, "error: failed to receive connection");
+        return;
     }
 }
 
@@ -96,18 +100,20 @@ void accept_connections(gromp_server *gromp) {
 
     if (gromp->connecting_socket < 0) {
         gromp_error(gromp, "error: failed to accept socket");
+        return;
     }   
 
     handle_connection(gromp);
     close(gromp->connecting_socket);
 }
 
-void gromp_start_listening(gromp_server *gromp) {
+void start_listening(gromp_server *gromp) {
     if (listen(gromp->current_socket, MAX_CONNECTIONS) < 0) {
-        gromp_error(gromp, "could not listen on port\n");
+        gromp_error(gromp, "gromp: could not listen on port\n");
+        return;
     }
 
-    while (true) {
+    while (gromp->running) {
         accept_connections(gromp);
     }
 }
@@ -124,5 +130,6 @@ void destroy_gromp_server(gromp_server *gromp) {
     if (gromp->running) {
         stop_gromp_server(gromp);
     }
+    printf("gromp: server stopped ^_^\n");
     free(gromp);
 }

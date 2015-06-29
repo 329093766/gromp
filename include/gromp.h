@@ -48,7 +48,7 @@ void bind_socket(gromp_server *gromp);
 
 void accept_connections(gromp_server *gromp);
 
-void gromp_start_listening(gromp_server *gromp);
+void start_listening(gromp_server *gromp);
 
 void stop_gromp_server(gromp_server *gromp);
 
