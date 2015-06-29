@@ -66,6 +66,9 @@ int gromp_receive(gromp_server *gromp) {
         case REQUEST_POST: break;
         default: break; // bad
     }
+
+    sdsfree(buffer);
+    return REQUEST_INVALID;
 }
 
 void create_socket(gromp_server *gromp) {
