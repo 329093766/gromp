@@ -50,6 +50,16 @@ void accept_connections(gromp_server *gromp);
 
 void start_listening(gromp_server *gromp);
 
+int gromp_error(gromp_server *gromp, const char *fmt, ...);
+
+int get_req_type(char *request);
+
+void handle_get_req(gromp_server *gromp, char *buffer);
+
+int gromp_receive(gromp_server *gromp);
+
+void handle_connection(gromp_server *gromp);
+
 void stop_gromp_server(gromp_server *gromp);
 
 void destroy_gromp_server(gromp_server *gromp);
