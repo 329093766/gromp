@@ -10,7 +10,7 @@ const char *REQUESTS[] = {
 
 gromp_server *create_gromp_server() {
     gromp_server *gromp = malloc(sizeof(*gromp));
-    gromp->port = 80;
+    gromp->port = 4444;
     return gromp;   
 }
 
@@ -26,7 +26,7 @@ int gromp_error(gromp_server *gromp, const char *fmt, ...) {
 
 void start_gromp_server(gromp_server *gromp) {
     if (gromp->running) {
-        fprintf(stderr, "error: gromp server already running\n");
+        gromp_error(gromp, "error: gromp server already running\n");
         return;
     }
     printf("gromp: starting gromp...\n");
@@ -54,7 +54,7 @@ int gromp_receive(gromp_server *gromp) {
     int packet_length = 0;
     char *buffer = sdsempty();
 
-    if ((packet_length = recv(gromp->current_socket, buffer, 0, false))) {
+    if ((packet_length = recv(gromp->current_socket, buffer, 0, false)) == -1) {
         gromp_error(gromp, "error: failed handling request\n");
         return REQUEST_INVALID;
     }
